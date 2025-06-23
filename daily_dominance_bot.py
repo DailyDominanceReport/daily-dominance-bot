@@ -75,8 +75,8 @@ def create_tweet(dominance_percent, marketcap, last_dominance):
     return tweet
 
 def pick_random_image():
-    replicant_dir = ".github/workflows/replicants"
-    images = [f for f in os.listdir(replicant_dir) if f.lower().endswith(".png")]
+    replicant_dir = "replicants_jpg"
+    images = [f for f in os.listdir(replicant_dir) if f.lower().endswith(".jpg")]
     if not images:
         return None
     return os.path.join(replicant_dir, random.choice(images))
