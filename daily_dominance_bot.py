@@ -1,111 +1,93 @@
-import requests
 import os
+import requests
 import random
-from datetime import datetime
-from dotenv import load_dotenv
 import tweepy
+from datetime import datetime
+from decimal import Decimal
 
-# Load secrets from .env
-load_dotenv()
+# === Load secrets from environment variables or GitHub secrets ===
+API_KEY = os.getenv("TWITTER_API_KEY")
+API_SECRET = os.getenv("TWITTER_API_SECRET")
+ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
+ACCESS_SECRET = os.getenv("TWITTER_ACCESS_SECRET")
 
-BEARER_TOKEN = os.getenv("BEARER_TOKEN")
-API_KEY = os.getenv("API_KEY")
-API_SECRET = os.getenv("API_SECRET")
-ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
-ACCESS_SECRET = os.getenv("ACCESS_SECRET")
-
-# Twitter client setup
+# === Initialize Twitter client ===
 auth = tweepy.OAuth1UserHandler(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_SECRET)
 api = tweepy.API(auth)
 
-# CoinGecko endpoints
-MD_ID = "market-dominance"
-COINGECKO_API = "https://api.coingecko.com/api/v3"
-LAST_FILE = "last_dominance.txt"
+# === Random phrases ===
+def pick_random_phrase():
+    phrases = [
+        "Cock Torture (Online)",
+        "$MD",
+        "Dominance Supremacy",
+        "Peak Replicant Activity",
+        "Engage Protocol",
+        "Initiating Cycle",
+        "Daily Scan Complete",
+        "☑ Market Status: Active",
+    ]
+    return random.choice(phrases)
 
-# Phrases
-phrases = [
-    "Jarvis prepare the cuck chair.",
-    "Studied Economics",
-    "Never Submit",
-    "There is no safe word",
-    "Gonna cry, piss your pants?",
-    "Hash from MD 🙏",
-    "Cock Torture (Online)",
-    "Penetration - yes please",
-    "Total Market Domination",
-    "My massive fucking titties?"
-]
+# === Format number cleanly ===
+def format_number(num, decimals=2):
+    return f"{num:,.{decimals}f}"
 
-def get_fdv_dominance():
-    md_data = requests.get(f"{COINGECKO_API}/coins/{MD_ID}").json()
-    fdv = md_data["market_data"]["fully_diluted_valuation"]["usd"]
-    global_data = requests.get(f"{COINGECKO_API}/global").json()
-    total_marketcap = global_data["data"]["total_market_cap"]["usd"]
-    return (fdv / total_marketcap) * 100, total_marketcap
+# === Get market dominance data ===
+def fetch_dominance_data():
+    url = "https://api.coingecko.com/api/v3/coins/market_dominance"
+    response = requests.get(url)
+    data = response.json()
 
-def get_last_dominance():
-    if os.path.exists(LAST_FILE):
-        with open(LAST_FILE, "r") as f:
-            return float(f.read().strip())
-    return None
+    # Replace 'market_dominance' and 'market_cap' with the actual keys in your API
+    dominance = Decimal(data["market_dominance"])
+    market_cap = Decimal(data["total_market_cap"])
+    return dominance, market_cap
 
-def save_current_dominance(current):
-    with open(LAST_FILE, "w") as f:
-        f.write(str(current))
-
-def create_tweet(dominance_percent, marketcap, last_dominance):
-    # Determine direction and change
-    change_line = ""
-    if last_dominance is not None:
-        change = dominance_percent - last_dominance
-        direction = "⬆️" if change > 0 else "⬇️"
-        percent_change = abs((change / last_dominance) * 100)
-        change_line = f" ({direction} {percent_change:.2f}%)"
-
-    # Build tweet
-    phrase = random.choice(phrases)
-    tweet = (
-        f"🔮 Daily Dominance Report.\n\n"
-        f"😈 Dominance (FDV): {dominance_percent:.8f}%{change_line}\n"
-        f"🌐 Total Market Cap: ${marketcap:,.2f}\n\n"
-        f"{phrase}\n"
-        "$MD"
-    )
-    return tweet
-
-def pick_random_image():
-    replicant_dir = "replicants_jpg"
-    images = [f for f in os.listdir(replicant_dir) if f.lower().endswith(".jpg")]
-    if not images:
+# === Load last dominance value to compute change ===
+def load_last_dominance():
+    try:
+        with open("last_dominance.txt", "r") as f:
+            return Decimal(f.read().strip())
+    except FileNotFoundError:
         return None
-    return os.path.join(replicant_dir, random.choice(images))
 
+def save_dominance(value):
+    with open("last_dominance.txt", "w") as f:
+        f.write(str(value))
+
+# === Create tweet text ===
+def create_tweet(dominance, market_cap, last_dominance):
+    change = dominance - last_dominance if last_dominance else Decimal(0)
+    arrow = "🔺" if change > 0 else "🔻" if change < 0 else "⏺"
+    percent_change = f"{arrow} {abs(change):.2f}%"
+
+    lines = [
+        "🧵 Daily Dominance Report.",
+        f"🧬 Dominance (FDV): {dominance:.8%} ({percent_change})",
+        f"🧪 Total Market Cap: ${format_number(market_cap, 2)}",
+        "",
+        pick_random_phrase(),
+    ]
+
+    return "\n".join(lines)
+
+# === Main bot function ===
 def main():
     try:
-        # Get current dominance + market cap
-        dominance, marketcap = get_fdv_dominance()
+        dominance, market_cap = fetch_dominance_data()
+        last_dominance = load_last_dominance()
 
-        # Read and update last dominance % file
-        last_dominance = get_last_dominance()
-        save_current_dominance(dominance)
-
-        # Build tweet
-        tweet = create_tweet(dominance, marketcap, last_dominance)
+        tweet = create_tweet(dominance, market_cap, last_dominance)
         print("Tweet content:\n", tweet)
 
-        # Pick and upload image
-        image_path = pick_random_image()
-        if image_path:
-            media = api.media_upload(image_path)
-            api.update_status(status=tweet, media_ids=[media.media_id])
-        else:
-            api.update_status(status=tweet)
+        # Send tweet (text only)
+        api.update_status(status=tweet)
 
-        print("Tweet sent!")
+        save_dominance(dominance)
 
     except Exception as e:
-        print(f"Error: {e}")
+        print("Error:", e)
 
 if __name__ == "__main__":
     main()
