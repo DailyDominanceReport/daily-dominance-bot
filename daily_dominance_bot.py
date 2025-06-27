@@ -5,15 +5,19 @@ import tweepy
 from datetime import datetime
 from decimal import Decimal
 
-# === Load secrets from environment variables or GitHub secrets ===
-API_KEY = os.getenv("TWITTER_API_KEY")
-API_SECRET = os.getenv("TWITTER_API_SECRET")
-ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
-ACCESS_SECRET = os.getenv("TWITTER_ACCESS_SECRET")
+# === Load secrets from environment variables ===
+API_KEY = os.getenv("API_KEY")
+API_SECRET = os.getenv("API_SECRET")
+ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
+ACCESS_SECRET = os.getenv("ACCESS_SECRET")
 
-# === Initialize Twitter client ===
-auth = tweepy.OAuth1UserHandler(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_SECRET)
-api = tweepy.API(auth)
+# === Initialize Tweepy Client (v2) ===
+client = tweepy.Client(
+    consumer_key=API_KEY,
+    consumer_secret=API_SECRET,
+    access_token=ACCESS_TOKEN,
+    access_token_secret=ACCESS_SECRET
+)
 
 # === Random phrases ===
 def pick_random_phrase():
@@ -39,12 +43,12 @@ def fetch_dominance_data():
     response = requests.get(url)
     data = response.json()
 
-    # Replace 'market_dominance' and 'market_cap' with the actual keys in your API
+    # Replace with real keys if needed
     dominance = Decimal(data["market_dominance"])
     market_cap = Decimal(data["total_market_cap"])
     return dominance, market_cap
 
-# === Load last dominance value to compute change ===
+# === Load last dominance value ===
 def load_last_dominance():
     try:
         with open("last_dominance.txt", "r") as f:
@@ -56,7 +60,7 @@ def save_dominance(value):
     with open("last_dominance.txt", "w") as f:
         f.write(str(value))
 
-# === Create tweet text ===
+# === Format tweet ===
 def create_tweet(dominance, market_cap, last_dominance):
     change = dominance - last_dominance if last_dominance else Decimal(0)
     arrow = "🔺" if change > 0 else "🔻" if change < 0 else "⏺"
@@ -65,14 +69,13 @@ def create_tweet(dominance, market_cap, last_dominance):
     lines = [
         "🧵 Daily Dominance Report.",
         f"🧬 Dominance (FDV): {dominance:.8%} ({percent_change})",
-        f"🧪 Total Market Cap: ${format_number(market_cap, 2)}",
+        f"🧪 Total Market Cap: ${format_number(market_cap)}",
         "",
         pick_random_phrase(),
     ]
-
     return "\n".join(lines)
 
-# === Main bot function ===
+# === Main ===
 def main():
     try:
         dominance, market_cap = fetch_dominance_data()
@@ -81,8 +84,8 @@ def main():
         tweet = create_tweet(dominance, market_cap, last_dominance)
         print("Tweet content:\n", tweet)
 
-        # Send tweet (text only)
-        api.update_status(status=tweet)
+        # Send tweet
+        client.create_tweet(text=tweet)
 
         save_dominance(dominance)
 
