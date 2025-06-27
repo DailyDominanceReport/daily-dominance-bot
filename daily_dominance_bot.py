@@ -2,24 +2,38 @@ import os
 import requests
 import random
 import tweepy
-from datetime import datetime
 from decimal import Decimal
+from datetime import datetime
+from dotenv import load_dotenv
+
+load_dotenv()
 
 # === Load secrets from environment variables ===
-API_KEY = os.getenv("API_KEY")
-API_SECRET = os.getenv("API_SECRET")
-ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
-ACCESS_SECRET = os.getenv("ACCESS_SECRET")
+API_KEY = os.getenv("TWITTER_API_KEY")
+API_SECRET = os.getenv("TWITTER_API_SECRET")
+ACCESS_TOKEN = os.getenv("TWITTER_ACCESS_TOKEN")
+ACCESS_SECRET = os.getenv("TWITTER_ACCESS_SECRET")
 
-# === Initialize Tweepy Client (v2) ===
-client = tweepy.Client(
-    consumer_key=API_KEY,
-    consumer_secret=API_SECRET,
-    access_token=ACCESS_TOKEN,
-    access_token_secret=ACCESS_SECRET
-)
+# === Twitter Auth ===
+auth = tweepy.OAuth1UserHandler(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_SECRET)
+api = tweepy.API(auth)
 
-# === Random phrases ===
+# === CoinGecko API Constants ===
+MD_ID = "market-dominance"
+COINGECKO_API = "https://api.coingecko.com/api/v3"
+
+# === Get FDV Dominance ===
+def get_fdv_dominance():
+    md_data = requests.get(f"{COINGECKO_API}/coins/{MD_ID}").json()
+    fdv = Decimal(md_data["market_data"]["fully_diluted_valuation"]["usd"])
+
+    global_data = requests.get(f"{COINGECKO_API}/global").json()
+    total_marketcap = Decimal(global_data["data"]["total_market_cap"]["usd"])
+
+    dominance_percent = (fdv / total_marketcap) * 100
+    return dominance_percent, total_marketcap
+
+# === Random phrase picker ===
 def pick_random_phrase():
     phrases = [
         "Cock Torture (Online)",
@@ -33,22 +47,11 @@ def pick_random_phrase():
     ]
     return random.choice(phrases)
 
-# === Format number cleanly ===
+# === Format number with commas ===
 def format_number(num, decimals=2):
     return f"{num:,.{decimals}f}"
 
-# === Get market dominance data ===
-def fetch_dominance_data():
-    url = "https://api.coingecko.com/api/v3/coins/market_dominance"
-    response = requests.get(url)
-    data = response.json()
-
-    # Replace with real keys if needed
-    dominance = Decimal(data["market_dominance"])
-    market_cap = Decimal(data["total_market_cap"])
-    return dominance, market_cap
-
-# === Load last dominance value ===
+# === File helpers ===
 def load_last_dominance():
     try:
         with open("last_dominance.txt", "r") as f:
@@ -60,7 +63,7 @@ def save_dominance(value):
     with open("last_dominance.txt", "w") as f:
         f.write(str(value))
 
-# === Format tweet ===
+# === Build Tweet ===
 def create_tweet(dominance, market_cap, last_dominance):
     change = dominance - last_dominance if last_dominance else Decimal(0)
     arrow = "🔺" if change > 0 else "🔻" if change < 0 else "⏺"
@@ -78,16 +81,16 @@ def create_tweet(dominance, market_cap, last_dominance):
 # === Main ===
 def main():
     try:
-        dominance, market_cap = fetch_dominance_data()
+        dominance, market_cap = get_fdv_dominance()
         last_dominance = load_last_dominance()
 
-        tweet = create_tweet(dominance, market_cap, last_dominance)
+        tweet = create_tweet(dominance / 100, market_cap, last_dominance)
         print("Tweet content:\n", tweet)
 
         # Send tweet
-        client.create_tweet(text=tweet)
+        api.update_status(status=tweet)
 
-        save_dominance(dominance)
+        save_dominance(dominance / 100)
 
     except Exception as e:
         print("Error:", e)
