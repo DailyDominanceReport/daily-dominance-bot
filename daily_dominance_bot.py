@@ -42,14 +42,17 @@ def get_fdv_dominance():
 # === Random phrase picker ===
 def pick_random_phrase():
     phrases = [
-        "Dominance Supremacy",
-        "$MD is holding the line",
-        "Engage Protocol",
-        "Peak Replicant Activity",
-        "Daily Scan Complete",
-        "☑ Market Status: Active",
-        "We Are So Back",
-        "MD Reign Continues"
+        "Cock Torture (Online)",
+        "Hash from $MD",
+        "Gonna cry, piss your pants?",
+        "GMD",
+        "Dominate the trenches",
+        "Jarvis, prepare the cuck chair",
+        "Purple up",
+        "Wew predicted this",
+        "Studied economics",
+        "Dominate your reality",
+        "Mr Penis"
     ]
     return random.choice(phrases)
 
