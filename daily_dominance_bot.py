@@ -42,17 +42,17 @@ def get_fdv_dominance():
 # === Random phrase picker ===
 def pick_random_phrase():
     phrases = [
-        "Cock Torture (Online)",
-        "Hash from $MD",
-        "Gonna cry, piss your pants?",
-        "GMD",
-        "Dominate the trenches",
-        "Jarvis, prepare the cuck chair",
-        "Purple up",
-        "Wew predicted this",
-        "Studied economics",
-        "Dominate your reality",
-        "Mr Penis"
+        "- Cock Torture (Online)",
+        "- Hash from $MD",
+        "- Gonna cry, piss your pants?",
+        "- GMD",
+        "- Dominate the trenches",
+        "- Jarvis, prepare the cuck chair",
+        "- Purple up",
+        "- Wew predicted this",
+        "- Studied economics",
+        "- Dominate your reality",
+        "- Mr Penis"
     ]
     return random.choice(phrases)
 
@@ -80,10 +80,11 @@ def create_tweet(dominance, market_cap, last_dominance):
 
     lines = [
         "🧵 Daily Dominance Report.\n",
-        f"🧬 Dominance (FDV): {dominance:.8%} ({percent_change})",
+        f"🧬 Dominance (TMD): {dominance:.8%} ({percent_change})",
         f"🧪 Total Market Cap: ${format_number(market_cap)}",
         "",
         pick_random_phrase(),
+        "$MD"
     ]
     return "\n".join(lines)
 
