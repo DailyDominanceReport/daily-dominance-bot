@@ -3,7 +3,7 @@ name: Daily Dominance Tweet
 on:
   schedule:
     - cron: '0 * * * *'  # Every hour UTC
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 jobs:
   tweet:
