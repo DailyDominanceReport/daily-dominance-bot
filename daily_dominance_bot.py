@@ -42,17 +42,17 @@ def get_fdv_dominance():
 # === Random phrase picker ===
 def pick_random_phrase():
     phrases = [
-        "- Cock Torture (Online)",
-        "- Hash from $MD",
-        "- Gonna cry, piss your pants?",
-        "- GMD",
-        "- Dominate the trenches",
-        "- Jarvis, prepare the cuck chair",
-        "- Purple up",
-        "- Wew predicted this",
-        "- Studied economics",
-        "- Dominate your reality",
-        "- Mr Penis"
+        "Cock Torture (Online)",
+        "Hash from $MD",
+        "Gonna cry, piss your pants?",
+        "GMD",
+        "Dominate the trenches",
+        "Jarvis, prepare the cuck chair",
+        "Purple up",
+        "Wew predicted this",
+        "Studied economics",
+        "Dominate your reality",
+        "Mr Penis"
     ]
     return random.choice(phrases)
 
