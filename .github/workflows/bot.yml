@@ -8,16 +8,16 @@ on:
 jobs:
   tweet:
     runs-on: ubuntu-latest
-
     env:
       API_KEY: ${{ secrets.API_KEY }}
       API_SECRET: ${{ secrets.API_SECRET }}
       ACCESS_TOKEN: ${{ secrets.ACCESS_TOKEN }}
       ACCESS_SECRET: ${{ secrets.ACCESS_SECRET }}
-      BEARER_TOKEN: ${{ secrets.BEARER_TOKEN }}
+      GH_PAT: ${{ secrets.GH_PAT }}
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -30,10 +30,10 @@ jobs:
       - name: Run bot
         run: python daily_dominance_bot.py
 
-      - name: Commit updated dominance file
+      - name: Commit updated last_dominance.txt
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add last_dominance.txt
           git commit -m "Update last_dominance.txt" || echo "No changes to commit"
-          git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/DailyDominanceReport/daily-dominance-bot.git
+          git push https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}.git
