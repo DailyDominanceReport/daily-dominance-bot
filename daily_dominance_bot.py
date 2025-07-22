@@ -13,10 +13,16 @@ API_KEY = os.getenv("API_KEY")
 API_SECRET = os.getenv("API_SECRET")
 ACCESS_TOKEN = os.getenv("ACCESS_TOKEN")
 ACCESS_SECRET = os.getenv("ACCESS_SECRET")
+BEARER_TOKEN = os.getenv("BEARER_TOKEN")
 
-# === Twitter Auth ===
-auth = tweepy.OAuth1UserHandler(API_KEY, API_SECRET, ACCESS_TOKEN, ACCESS_SECRET)
-api = tweepy.API(auth)
+# === Twitter Auth using Tweepy Client (v2) ===
+client = tweepy.Client(
+    bearer_token=BEARER_TOKEN,
+    consumer_key=API_KEY,
+    consumer_secret=API_SECRET,
+    access_token=ACCESS_TOKEN,
+    access_token_secret=ACCESS_SECRET
+)
 
 # === CoinGecko API Constants ===
 MD_ID = "market-dominance"
@@ -36,14 +42,14 @@ def get_fdv_dominance():
 # === Random phrase picker ===
 def pick_random_phrase():
     phrases = [
-        "Cock Torture (Online)",
-        "$MD",
         "Dominance Supremacy",
-        "Peak Replicant Activity",
+        "$MD is holding the line",
         "Engage Protocol",
-        "Initiating Cycle",
+        "Peak Replicant Activity",
         "Daily Scan Complete",
         "☑ Market Status: Active",
+        "We Are So Back",
+        "MD Reign Continues"
     ]
     return random.choice(phrases)
 
@@ -87,8 +93,8 @@ def main():
         tweet = create_tweet(dominance / 100, market_cap, last_dominance)
         print("Tweet content:\n", tweet)
 
-        # Send tweet
-        api.update_status(status=tweet)
+        # Send tweet using Twitter API v2
+        client.create_tweet(text=tweet)
 
         save_dominance(dominance / 100)
 
