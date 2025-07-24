@@ -52,7 +52,7 @@ def pick_random_phrase():
         "Studied economics",
         "Dominate your reality",
         "Mr Penis",
-        "I am not Homunculus"
+        "I am not the Homunculus"
     ]
     return random.choice(phrases)
 
