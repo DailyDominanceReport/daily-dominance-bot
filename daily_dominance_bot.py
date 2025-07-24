@@ -84,7 +84,7 @@ def create_tweet(dominance, market_cap, last_dominance):
 
     lines = [
         "🧵 Dominance Report:\n",
-        f"🧬 Dominance (TMD):\n{dominance:.8%} ({percent_change})\n",
+        f"🧬 Total Market Dominance (TMD):\n{dominance:.8%} ({percent_change})\n",
         f"🧪 Total Market Cap:\n${format_number(market_cap)}\n",
         pick_random_phrase(),
         "$MD"
