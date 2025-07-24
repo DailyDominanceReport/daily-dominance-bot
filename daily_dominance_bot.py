@@ -51,9 +51,10 @@ def pick_random_phrase():
         "Wew predicted this",
         "Studied economics",
         "Dominate your reality",
-        "Mr Penis"
+        "Mr Penis",
+        "I am not Homunculus"
     ]
-    return "-" + random.choice(phrases)
+    return random.choice(phrases)
 
 # === Format number with commas ===
 def format_number(num, decimals=2):
