@@ -3,7 +3,6 @@ import requests
 import random
 import tweepy
 from decimal import Decimal
-from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
@@ -54,7 +53,7 @@ def pick_random_phrase():
         "Dominate your reality",
         "Mr Penis"
     ]
-    return random.choice(phrases)
+    return "-" + random.choice(phrases)
 
 # === Format number with commas ===
 def format_number(num, decimals=2):
@@ -74,15 +73,18 @@ def save_dominance(value):
 
 # === Build Tweet ===
 def create_tweet(dominance, market_cap, last_dominance):
-    change = dominance - last_dominance if last_dominance else Decimal(0)
-    arrow = "🔺" if change > 0 else "🔻" if change < 0 else "⏺"
-    percent_change = f"{arrow} {abs(change):.2f}%"
+    if last_dominance and last_dominance != 0:
+        percent_change_value = ((dominance - last_dominance) / last_dominance) * 100
+    else:
+        percent_change_value = Decimal(0)
+
+    arrow = "🔺" if percent_change_value > 0 else "🔻" if percent_change_value < 0 else "⏺"
+    percent_change = f"{arrow} {abs(percent_change_value):.5f}%"
 
     lines = [
         "🧵 Dominance Report:\n",
-        f"🧬 Dominance (TMD): \n{dominance:.8%} ({percent_change})\n",
-        f"🧪 Total Market Cap: \n${format_number(market_cap)}",
-        "",
+        f"🧬 Dominance (TMD):\n{dominance:.8%} ({percent_change})\n",
+        f"🧪 Total Market Cap:\n${format_number(market_cap)}\n",
         pick_random_phrase(),
         "$MD"
     ]
